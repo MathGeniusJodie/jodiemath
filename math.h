@@ -138,7 +138,7 @@ float atanf(float x) {
 	//float y = (a < 1.0f) ? a : 1.0f / a;
 	unsigned int mask = a<1.f?0xffffffffu:0;
 	float y = utf((mask&ftu(a))|((~mask)&ftu(1.f/a)));
-	y = y+y*y*y/((0.203984*y-1.86607)*y*y-2.99766);
+	y = y+y*y*y/((0.203984f*y-1.86607f)*y*y-2.99766f);
 	return mulsign(
 		//(a < 1.0f) ? y : hpi - y
 		utf((mask&ftu(y)) | ((~mask)&ftu(hpi - y)))
