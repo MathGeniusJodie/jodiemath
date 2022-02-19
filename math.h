@@ -199,8 +199,12 @@ float cosf(float x){
 	return mulsign(cosf_poly(fabsf(b)*tau-hpi),b);
 }
 
-static float exp2f_fract(float x){
-	return x+1.f+(x-x*x)/((-0.0382294f*x+0.708703f)*x-3.25901f);
+static float exp2f_fract(float x) {
+    float a = utf(0xc0d7a065u);
+    float b = utf(0x412a97f3u);
+    float c = utf(0x42573661u);
+    return (a-x)*((x+b)*x+c)/
+          ((a+x)*((x-b)*x+c));
 }
 
 float exp2f(float x){
