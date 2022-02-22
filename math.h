@@ -185,8 +185,13 @@ float copysignf( float x, float y ){
 }
 
 static float cosf_poly(float x){
-	x*=x;
-	return ((((x*x)*-.0166999f+x)*.00132473f-.0383831f)*x+.405284f)*(2.4674f-x);
+    x*=x;
+    return x*(x*((
+        utf(0x37bf85f0u)*x+
+        utf(0xbab559edu))*x+
+        utf(0x3d2aa41eu))+
+        utf(0xbeffff9eu))+
+        utf(0x3f7ffffbu);
 }
 
 float cosf(float x){
