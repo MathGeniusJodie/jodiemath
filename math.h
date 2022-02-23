@@ -237,7 +237,12 @@ float expf(float x) {
 }
 
 float expm1f(float x) {
-	return expf(x)-1.f;
+    unsigned int mask = fabsf(x)<.5f?0xffffffffu:0;
+    // pade approximant
+    float a = x*(-2.f*x*x-120.f)/
+        (x*((x-12.f)*x+60.f)-120.f);
+    float b = expf(x)-1.f;
+    return utf((mask&ftu(a))|((~mask)&ftu(b)));
 }
 
 static float erff_poly(float x){

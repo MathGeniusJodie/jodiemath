@@ -2,7 +2,7 @@
 a small, fast, vectorizeable libm
 
 ## goals:
-* all functions have absolute or relative error ~= 0.000010 or less, this isn't a fast math library, it's meant to be general purpose
+* all functions aim for a relative error of ~= 0.000001 or less, this isn't a fast math library, it's meant to be general purpose
 * at least attempt to be readable
 * try to keep source and assembly output small first and fast second
 * only for 32 bit floats, if you need the accuracy of doubles, this library is not for you
@@ -16,8 +16,6 @@ a small, fast, vectorizeable libm
 * gcc and clang might have bugs that prevent proper vectorization
 
 ## todo
-* better expm1f
-* better tanf
 * implement gamma functions
 * implement remquof
 * write tests
