@@ -184,6 +184,14 @@ float copysignf( float x, float y ){
 	return utf((ftu(x) & 0x7fffffffu)| ftu(y) & 0x80000000u);
 }
 
+float roundf(float x){
+	#ifdef __SSE4_1__
+	return __builtin_roundf(x);
+	#endif
+	const float big=utf((0x7f+23)<<23);
+	return mulsign(fabsf(x)+big-big, x);
+}
+
 static float cosf_poly(float x){
     x*=x;
     return x*(x*((
@@ -199,7 +207,7 @@ float cosf(float x){
 	const float rtau = 0.15915494309189533576f;
 	const float hpi = 1.57079632679489661923f;
 	float z = (x+hpi)*rtau;
-	float b = z-__builtin_floorf(z+.5f);
+	float b = z-roundf(z);
 	return mulsign(cosf_poly(fabsf(b)*tau-hpi),b);
 }
 
@@ -303,14 +311,6 @@ float ldexpf(float x, int n){
 }
 
 //float       lgammaf(float);
-
-float roundf(float x){
-	#ifdef __SSE4_1__
-	return __builtin_roundf(x);
-	#endif
-	const float big=utf((0x7f+23)<<23);
-	return mulsign(fabsf(x)+big-big, x);
-}
 
 long long llrintf(float x){
 	return __builtin_llrintf(x);
