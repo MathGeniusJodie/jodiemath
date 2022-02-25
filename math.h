@@ -246,13 +246,28 @@ float expm1f(float x) {
 }
 
 static float erff_poly(float x){
-	return ((((-0.00289436*x+0.0292923)*x-0.148118)*x-0.918879)*x-1.62781)*x;
+    float u = 3.118769e-4f;
+    u = u * x + -4.67225e-3f;
+    u = u * x + 3.3162573e-2f;
+    u = u * x + -1.5214339e-1f;
+    u = u * x + -9.1684705e-1f;
+    u = u * x + -1.6282598f;
+    return u * x + 3.1332566e-5f;
 }
 
 float erff(float x){
-	return mulsign(
-		1.f-exp2f(erff_poly(fabsf(x)))
-	,x);
+    //pade approximant
+    float a =x*(
+        utf(0x3f906ebbu)+
+        utf(0x3f174f6eu)*(x*x)
+    )/(1.f+(x*x)*(
+        utf(0x3f5b6db7u)+
+        utf(0x3e3e2be3u)*(x*x)
+    ));
+    float b = mulsign(
+        1.f-exp2f(erff_poly(fabsf(x)))
+    ,x);
+    return fabs(x)<0.28f?a:b;
 }
 
 float erfcf(float x) {
