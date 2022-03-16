@@ -130,6 +130,20 @@ float asinhf(float x) {
 	return logf(x + sqrtf(x * x + 1.));
 };
 
+float atanf_poly(float x){
+    float a=utf(0x3d267031);
+    float b=utf(0x3f28513c);
+    float c=utf(0x3e2f725f);
+    float d=utf(0x3f7da425);
+    float x2=x*x;
+    #ifdef __FMA__
+    return (fmaf(fmaf(a,x2,b),x2,1.f)*x)/
+    fmaf(fmaf(x2,c,d),x2,1.f);
+    #endif
+    return (((a*x2+b)*x2+1.f)*x)/
+    ((x2*c+d)*x2+1.f);
+}
+
 float atanf(float x) {
 	float a = fabsf(x);
 	const float hpi = 1.57079632679489661923f;
@@ -137,7 +151,7 @@ float atanf(float x) {
 	//float y = (a < 1.0f) ? a : 1.0f / a;
 	unsigned int mask = a<1.f?0xffffffffu:0;
 	float y = utf((mask&ftu(a))|((~mask)&ftu(1.f/a)));
-	y = y+y*y*y/((0.203984f*y-1.86607f)*y*y-2.99766f);
+	y = atanf_poly(y);
 	return mulsign(
 		//(a < 1.0f) ? y : hpi - y
 		utf((mask&ftu(y)) | ((~mask)&ftu(hpi - y)))
