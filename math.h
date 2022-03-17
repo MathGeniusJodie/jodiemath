@@ -206,31 +206,40 @@ float roundf(float x){
 	return mulsign(fabsf(x)+big-big, x);
 }
 
-static float cosf_poly(float x){
-    x*=x;
-    return x*(x*((
-        utf(0x37bf85f0u)*x+
-        utf(0xbab559edu))*x+
-        utf(0x3d2aa41eu))+
-        utf(0xbeffff9eu))+
-        utf(0x3f7ffffbu);
+static float sinf_poly(float x){
+    float a = utf(0xb2cc0ff1);
+    float b = utf(0x3638a80e);
+    float c = utf(0xb9500b44);
+    float d = utf(0x3c088883);
+    float e = utf(0xbe2aaaaa);
+    float x2=x*x;
+    #ifdef __FMA__
+    return fmaf(fmaf(fmaf(fmaf(fmaf(a,x2,b),x2,c),x2,d),x2,e),x2,1.f)*x;
+    #endif
+    return (((((a*x2+b)*x2+c)*x2+d)*x2+e)*x2+1.f)*x;
 }
 
 float cosf(float x){
-	const float tau = 6.28318530717958647692f;
-	const float rtau = 0.15915494309189533576f;
-	const float hpi = 1.57079632679489661923f;
-	float z = (x+hpi)*rtau;
-	float b = z-roundf(z);
-	return mulsign(cosf_poly(fabsf(b)*tau-hpi),b);
+    const float tau = 6.28318530717958647692;
+	const float rtau = 0.15915494309189533576;
+    x=x-roundf(x*rtau)*tau;
+    x=sinf_poly(x*0.5f);
+    #ifdef __FMA__
+    return fmaf((-2.f*x),x,1.f);
+    #endif
+    return -2.f*x*x+1.f;
 }
 
-static float exp2f_fract(float x) {
-    float a = utf(0xc0d7a065u);
-    float b = utf(0x412a97f3u);
-    float c = utf(0x42573661u);
-    return (a-x)*((x+b)*x+c)/
-          ((a+x)*((x-b)*x+c));
+float exp2f_fract(float x) {
+    float a=utf(0x3af71c15);
+    float b=utf(0x3c130514);
+    float c=utf(0x3d64b437);
+    float d=utf(0x3e75ea9e);
+    float e=utf(0x3f317271);
+    #ifdef __FMA__
+    return fmaf(fmaf(fmaf(fmaf(fmaf(a,x,b),x,c),x,d),x,e),x,1.f);
+    #endif
+    return ((((a*x+b)*x+c)*x+d)*x+e)*x+1.f;
 }
 
 float exp2f(float x){
@@ -398,13 +407,14 @@ float scalbnf(float x, int n){
 
 float sinf(float x){
 	const float tau = 6.28318530717958647692f;
+    const float taulo = utf(0x343bbd2e);
 	const float rtau = 0.15915494309189533576f;
-	const float hpi = 1.57079632679489661923f;
 	const float pi = 3.14159265358979323846f;
-
-	float z = (pi-x)*rtau;
-	float b = z-roundf(z);
-	return mulsign(cosf_poly(fabsf(b)*tau-hpi),b);
+    const float pilo = utf(0x33bbbd2e);
+    const float rpi = 0.3183098861837907f;
+    float z=x-roundf(x*rtau)*tau+roundf(x*rtau)*taulo;
+    float y=fabs(x-roundf(x*rpi)*pi+roundf(x*rpi)*pilo);
+	return sinf_poly(mulsign(y,z));
 }
 
 float sinhf(float x){
