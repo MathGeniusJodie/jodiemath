@@ -206,14 +206,11 @@ static float sinf_poly(float x) {
 }
 
 float cosf(float x) {
-  const float tau = 6.28318530717958647692;
-  const float rtau = 0.15915494309189533576;
-  x = x - roundf(x * rtau) * tau;
-  x = sinf_poly(x * 0.5f);
-#ifdef __FMA__
-  return fmaf((-2.f * x), x, 1.f);
-#endif
-  return -2.f * x * x + 1.f;
+  const float tau = 6.28318530717958647692f;
+  const float taulo = utf(0x343bbd2e);
+  const float rtau = 0.15915494309189533576f;
+  float m = fabs(x-roundf(x * rtau)*tau+roundf(x * rtau)*taulo);
+  return -sinf_poly((m-tau/4.f)+taulo/4.f);
 }
 
 float exp2f_fract(float x) {
