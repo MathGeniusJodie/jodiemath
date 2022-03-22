@@ -71,17 +71,11 @@ float fmaf(float x, float y, float z) {
 #ifdef __FMA__
   return __builtin_fmaf(x, y, z);
 #endif
-  // float float multiply
   float d = 4097.f;   /*  1+2^12 */
   float ap = a*d;        float bp = b*d;
-  float a1 = (a-ap)+ap;  float b1 = (b-bp)+bp;
-  float a2 = a-a1;       float b2 = b-b1;
-  float h = a*b;
-  float l = (((a1*b1-h)+(a1*b2))+(a2*b1))+(a2*2.f);
-  //float float add
-  float x = h + c;
-  float y = x - h;
-  return x + (((h - (x - y)) + (c - y)) + l);
+  float ah = (a-ap)+ap;  float bh = (b-bp)+bp;
+  float al = a-ah;       float bl = b-bh;
+  return ((ah*bh + c) + ah*bl + al*bh) + al*bl;
 }
 
 float acosf(float x) {
