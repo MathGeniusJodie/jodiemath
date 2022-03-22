@@ -67,6 +67,23 @@ static float mulsign(float x, float y) {
 // every mainstream cpu architecture has a sqrt instruction
 float sqrtf(float x) { return __builtin_sqrtf(x); }
 
+float fmaf(float x, float y, float z) {
+#ifdef __FMA__
+  return __builtin_fmaf(x, y, z);
+#endif
+  // float float multiply
+  float d = 4097.f;   /*  1+2^12 */
+  float ap = a*d;        float bp = b*d;
+  float a1 = (a-ap)+ap;  float b1 = (b-bp)+bp;
+  float a2 = a-a1;       float b2 = b-b1;
+  float h = a*b;
+  float l = (((a1*b1-h)+(a1*b2))+(a2*b1))+(a2*2.f);
+  //float float add
+  float x = h + c;
+  float y = x - h;
+  return x + (((h - (x - y)) + (c - y)) + l);
+}
+
 float acosf(float x) {
   const float hpi = 1.57079632679489661923f;
   float a = fabsf(x);
@@ -206,13 +223,34 @@ static float sinf_poly(float x) {
 }
 
 float cosf(float x) {
-  const float tau = 6.28318530717958647692f;
-  const float taulo = utf(0x343bbd2e);
-  const float rtau = 0.15915494309189533576f;
-  float m = fabs(x-roundf(x * rtau)*tau+roundf(x * rtau)*taulo);
-  return -sinf_poly((m-tau/4.f)+taulo/4.f);
-}
+  double tau=6.2831853071795864769252867665590057683943387987502116419498891846;
+  float tauh=tau;
+  float taul=tau-((double)tauh);
+  double rtau=0.1591549430918953357688837633725143620344596457404564487476673440;
+  float rtauh=rtau;
+  float rtaul=rtau-((double)rtauh);
+  #ifdef __FMA__
+    float m=floorf(fmaf(x,(rtauh*2.f),x*(rtaul*2.f)));
+    float s = ((int)m&1)*2-1;
 
+    float high=fmaf(m,tauh/2.f,tauh/4.f);
+    float errorhigh=tauh/4.f+fmaf(m,tauh/2.f,-high);
+    float low=fmaf(m,taul/2.f,taul/4.f);
+  #else
+    float m=floorf(x*(rtauh*2.f)+x*(rtaul*2.f));
+    float s = ((int)m&1)*2-1;
+
+    float high=m*tauh/2.f+tauh/4.f;
+    float errorhigh=tauh/4.f+fmaf(m,tauh/2.f,-high);
+    float low=m*taul/2.f+taul/4.f;
+  #endif
+
+  x-=high;
+  x-=errorhigh;
+  x-=low;
+
+  return sinf_poly(x*s);
+}
 float exp2f_fract(float x) {
   float a = utf(0x3af71c15);
   float b = utf(0x3c130514);
@@ -288,13 +326,6 @@ float floorf(float x) {
   u &= ~m;
   u = (zero & (negative & ftu(-1.0f))) | (~zero & u);
   return utf(u);
-}
-
-float fmaf(float x, float y, float z) {
-#ifdef __FMA__
-  return __builtin_fmaf(x, y, z);
-#endif
-  return x * y + z;
 }
 
 float fmaxf(float x, float y) { return x < y ? y : x; }
