@@ -71,10 +71,10 @@ float fmaf(float x, float y, float z) {
 #ifdef __FMA__
   return __builtin_fmaf(x, y, z);
 #endif
-  float d = 4097.f;   /*  1+2^12 */
-  float ap = a*d;        float bp = b*d;
-  float ah = (a-ap)+ap;  float bh = (b-bp)+bp;
-  float al = a-ah;       float bl = b-bh;
+  float ah = utf(ftu(a)&0xfffff000);
+  float bh = utf(ftu(b)&0xfffff000);
+  float al = a-ah;
+  float bl = b-bh;
   return ((ah*bh + c) + ah*bl + al*bh) + al*bl;
 }
 
