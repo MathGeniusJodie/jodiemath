@@ -71,11 +71,11 @@ float fmaf(float x, float y, float z) {
 #ifdef __FMA__
   return __builtin_fmaf(x, y, z);
 #endif
-  float ah = utf(ftu(a)&0xfffff000);
-  float bh = utf(ftu(b)&0xfffff000);
-  float al = a-ah;
-  float bl = b-bh;
-  return ((ah*bh + c) + ah*bl + al*bh) + al*bl;
+  float ah = utf(ftu(a) & 0xfffff000);
+  float bh = utf(ftu(b) & 0xfffff000);
+  float al = a - ah;
+  float bl = b - bh;
+  return ((ah * bh + c) + ah * bl + al * bh) + al * bl;
 }
 
 float acosf(float x) {
@@ -92,10 +92,18 @@ float acosf(float x) {
 // )-1)*1.57079632679489661923+1.57079632679489661923
 
 static float log2f_mantissa(float x) {
+#ifdef __FMA__
+  return fmaf(fmaf(utf(0x40153ebb), x, utf(0x413b8af9)), x, utf(0x409c1a68)) *
+         (x - 1.f) /
+         fmaf(fmaf(fmaf(utf(0x3ecfca47), x, utf(0x409f8156)), x,
+                   utf(0x40d76ca4)),
+              x, 1.f);
+#else
   return 5.7474026229742f * (x - 1.f) * (x + 0.45769302384949f) *
          (x + 4.5715238426130f) /
          ((x + 0.16943400804003f) * (x + 1.3506082324849f) *
           (x + 10.770128254704f));
+#endif
 }
 
 float log2f(float x) {
@@ -217,33 +225,35 @@ static float sinf_poly(float x) {
 }
 
 float cosf(float x) {
-  double tau=6.2831853071795864769252867665590057683943387987502116419498891846;
-  float tauh=tau;
-  float taul=tau-((double)tauh);
-  double rtau=0.1591549430918953357688837633725143620344596457404564487476673440;
-  float rtauh=rtau;
-  float rtaul=rtau-((double)rtauh);
-  #ifdef __FMA__
-    float m=floorf(fmaf(x,(rtauh*2.f),x*(rtaul*2.f)));
-    float s = ((int)m&1)*2-1;
+  double tau =
+      6.2831853071795864769252867665590057683943387987502116419498891846;
+  float tauh = tau;
+  float taul = tau - ((double)tauh);
+  double rtau =
+      0.1591549430918953357688837633725143620344596457404564487476673440;
+  float rtauh = rtau;
+  float rtaul = rtau - ((double)rtauh);
+#ifdef __FMA__
+  float m = floorf(fmaf(x, (rtauh * 2.f), x * (rtaul * 2.f)));
+  float s = ((int)m & 1) * 2 - 1;
 
-    float high=fmaf(m,tauh/2.f,tauh/4.f);
-    float errorhigh=tauh/4.f+fmaf(m,tauh/2.f,-high);
-    float low=fmaf(m,taul/2.f,taul/4.f);
-  #else
-    float m=floorf(x*(rtauh*2.f)+x*(rtaul*2.f));
-    float s = ((int)m&1)*2-1;
+  float high = fmaf(m, tauh / 2.f, tauh / 4.f);
+  float errorhigh = tauh / 4.f + fmaf(m, tauh / 2.f, -high);
+  float low = fmaf(m, taul / 2.f, taul / 4.f);
+#else
+  float m = floorf(x * (rtauh * 2.f) + x * (rtaul * 2.f));
+  float s = ((int)m & 1) * 2 - 1;
 
-    float high=m*tauh/2.f+tauh/4.f;
-    float errorhigh=tauh/4.f+fmaf(m,tauh/2.f,-high);
-    float low=m*taul/2.f+taul/4.f;
-  #endif
+  float high = m * tauh / 2.f + tauh / 4.f;
+  float errorhigh = tauh / 4.f + fmaf(m, tauh / 2.f, -high);
+  float low = m * taul / 2.f + taul / 4.f;
+#endif
 
-  x-=high;
-  x-=errorhigh;
-  x-=low;
+  x -= high;
+  x -= errorhigh;
+  x -= low;
 
-  return sinf_poly(x*s);
+  return sinf_poly(x * s);
 }
 float exp2f_fract(float x) {
   float a = utf(0x3af71c15);
