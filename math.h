@@ -78,14 +78,21 @@ float fmaf(float x, float y, float z) {
   return ((ah * bh + c) + ah * bl + al * bh) + al * bl;
 }
 
-float acosf(float x) {
-  const float hpi = 1.57079632679489661923f;
-  float a = fabsf(x);
-  a = (a * a - a) /
-          (-3.66063f - a * (1.75866f - a * (0.179323f - 0.0392588f * a))) +
-      a;
-  a = mulsign(sqrtf(1.f - a) - 1.f, x) * hpi + hpi;
-  return a;
+static float acosf_poly(float x){
+    float u = 2.2960134e-3f;
+    u = u * x + -1.1146357e-2f;
+    u = u * x + 2.6900099e-2f;
+    u = u * x + -4.8802612e-2f;
+    u = u * x + 8.875567e-2f;
+    u = u * x + -2.1458527e-1f;
+    return u * x + 1.5707962f;
+}
+
+float acosf(float x){
+    float pi=3.14159265359f;
+    float a = fabsf(x);
+    float y = sqrtf(1.f-a)*acosf_poly(a);
+    return mulsign(y,x)+(x<0?pi:0);
 }
 
 // y = (sqrt(1-((a*a-a)/f(a)+a)
