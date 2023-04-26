@@ -315,7 +315,24 @@ float erff(float x) {
   return fabs(x) < 0.28f ? a : b;
 }
 
-float erfcf(float x) { return 1.f - erff(x); }
+float erfcf(float x) {
+    float z = x<0.f?-1.f:1.f;
+    float w = x<0.f?2.f:0.f;
+    x = fabsf(x);
+    x = x>10.f?10.f:x;
+  float y = expf(-(x*x))*
+    fmaf(fmaf(fmaf(fmaf(
+        utf(0x35c42f59),x,
+        utf(0x3daf42dc)),x,
+        utf(0x3ee32e3c)),x,
+        utf(0x3f7a7520)),x,1.f)/
+    fmaf(fmaf(fmaf(fmaf(
+        utf(0x3e1b69eb),x,
+        utf(0x3f48fde0)),x,
+        utf(0x3fe918cc)),x,
+        utf(0x4006d465)),x,1.f);
+    return fmaf(y,z,w);
+}
 
 float coshf(float x) { return .5f * (expf(x) + expf(-x)); }
 
