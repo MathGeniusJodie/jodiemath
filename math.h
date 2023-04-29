@@ -213,8 +213,8 @@ float roundf(float x) {
 #ifdef __SSE4_1__
   return __builtin_roundf(x);
 #endif
-  const float big = utf((0x7f + 23) << 23);
-  return mulsign(fabsf(x) + big - big, x);
+    float big = mulsign(utf((0x7f+23)<<23),x);
+    return x+big-big;
 }
 
 static float sinf_poly(float x) {
