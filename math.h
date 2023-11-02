@@ -41,15 +41,15 @@ int fpclassify(float x) {
                            : FP_NORMAL;
 }
 
-int isinf(float x) { return ftu(fabsf(x)) == 0x7f800000u; }
+#define isinf(x) (ftu(fabsf(x)) == 0x7f800000u) 
 
-int isnan(float x) { return ftu(fabsf(x)) > 0x7f800000u; }
+#define isnan(x) (ftu(fabsf(x)) > 0x7f800000u)
 
 int isnormal(float x) { return (ftu(x) & EXPONENT_MASK) > 0; }
 
 int isfinite(float x) { return ftu(fabsf(x)) < 0x7f800000u; }
 
-int signbit(float x) { return ftu(x) >> 31; }
+#define signbit(x) (ftu(x) >> 31)
 
 #define isunordered(x, y) (isnan(x) || isnan(y) ? 1.f : 0.f)
 
@@ -67,7 +67,7 @@ static float mulsign(float x, float y) {
 // every mainstream cpu architecture has a sqrt instruction
 float sqrtf(float x) { return __builtin_sqrtf(x); }
 
-float fmaf(float x, float y, float z) {
+float fmaf(float a, float b, float c) {
 #ifdef __FMA__
   return __builtin_fmaf(x, y, z);
 #endif
@@ -217,6 +217,21 @@ float roundf(float x) {
     return x+big-big;
 }
 
+float floorf(float x) {
+#ifdef __SSE4_1__
+  return __builtin_floorf(x);
+#endif
+  unsigned int u = ftu(x);
+  unsigned int e = u >> 23u & 0xff;
+  unsigned int negative = x < 0.f ? 0xffffffffu : 0u;
+  unsigned int zero = e < 127u ? 0xffffffffu : 0u;
+  unsigned int m = MANTISSA_MASK >> (e - 127u);
+  u += negative & m;
+  u &= ~m;
+  u = (zero & (negative & ftu(-1.0f))) | (~zero & u);
+  return utf(u);
+}
+
 static float sinf_poly(float x) {
   float a = utf(0xb2cc0ff1);
   float b = utf(0x3638a80e);
@@ -312,7 +327,7 @@ float erff(float x) {
   float a = x * (utf(0x3f906ebbu) + utf(0x3f174f6eu) * (x * x)) /
             (1.f + (x * x) * (utf(0x3f5b6db7u) + utf(0x3e3e2be3u) * (x * x)));
   float b = mulsign(1.f - exp2f(erff_poly(fabsf(x))), x);
-  return fabs(x) < 0.28f ? a : b;
+  return fabsf(x) < 0.28f ? a : b;
 }
 
 float erfcf(float x) {
@@ -341,20 +356,7 @@ float fdimf(float x, float y) {
   return utf(greater & ftu(x - y));
 }
 
-float floorf(float x) {
-#ifdef __SSE4_1__
-  return __builtin_floorf(x);
-#endif
-  unsigned int u = ftu(x);
-  unsigned int e = u >> 23u & 0xff;
-  unsigned int negative = x < 0.f ? 0xffffffffu : 0u;
-  unsigned int zero = e < 127u ? 0xffffffffu : 0u;
-  unsigned int m = MANTISSA_MASK >> (e - 127u);
-  u += negative & m;
-  u &= ~m;
-  u = (zero & (negative & ftu(-1.0f))) | (~zero & u);
-  return utf(u);
-}
+
 
 float fmaxf(float x, float y) { return x < y ? y : x; }
 
@@ -415,7 +417,7 @@ float sinf(float x) {
   const float pilo = utf(0x33bbbd2e);
   const float rpi = 0.3183098861837907f;
   float z = x - roundf(x * rtau) * tau + roundf(x * rtau) * taulo;
-  float y = fabs(x - roundf(x * rpi) * pi + roundf(x * rpi) * pilo);
+  float y = fabsf(x - roundf(x * rpi) * pi + roundf(x * rpi) * pilo);
   return sinf_poly(mulsign(y, z));
 }
 
